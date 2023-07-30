@@ -1,0 +1,59 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+model Post {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  title     String   @db.VarChar(255)
+  content   String?
+  published Boolean  @default(false)
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  Int
+  Board     Board?   @relation(fields: [boardId], references: [id])
+  boardId   Int?
+  comments  Comment[]
+}
+model Comment {
+  postedBy User @relation(fields: [userId], references: [id])
+  userId Int @unique
+  id Int    @id @default(autoincrement())
+  post Post @relation(fields: [postId], references: [id])
+  postId Int @unique
+}
+model Profile {
+  id     Int     @id @default(autoincrement())
+  bio    String?
+  user   User    @relation(fields: [userId], references: [id])
+  userId Int     @unique
+  photo String
+  doots Int
+}
+
+model User {
+  id      Int      @id @default(autoincrement())
+  email   String   @unique
+  name    String   @unique
+  posts   Post[]
+  profile Profile?
+  boards  Board[]
+  password String
+  comments Comment[]
+}
+
+model Board {
+  id     Int    @id @default(autoincrement())
+  name   String @unique
+  owner  User   @relation(fields: [userId], references: [id])
+  userId Int
+  posts  Post[]
+  // tags String[]
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = "mysql://root:ezpassword@localhost:3306/database"
+}
