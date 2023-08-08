@@ -6,12 +6,6 @@ import { AuthContextProps, useAuth } from '../auth/authContext'
 import { PageHeader } from '../styles/styles';
 
 
-
-interface MockProfile {
-    id: number;
-    name: string;
-    posts: string[];
-  }
   interface User {
     id: number;
     username: string;
@@ -19,12 +13,11 @@ interface MockProfile {
     password: string;
   }
 const Profile = () => {
-    const [boards, setBoards] = useState<MockProfile | null>(null);
     const { authenticated, user } = useAuth() as AuthContextProps
     return (
         <div>
         {authenticated ? 
-        (<PageHeader>{user?.name}</PageHeader>)
+        (<PageHeader>{user?.username}</PageHeader>)
          : ("user not found")}
         </div>
     )

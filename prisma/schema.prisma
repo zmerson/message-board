@@ -1,52 +1,107 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 model Post {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  title     String   @db.VarChar(255)
+  id        Int       @id @default(autoincrement())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  title     String    @db.VarChar(255)
   content   String?
-  published Boolean  @default(false)
-  author    User     @relation(fields: [authorId], references: [id])
+  published Boolean   @default(false)
+  author    User      @relation(fields: [authorId], references: [id])
   authorId  Int
-  Board     Board?   @relation(fields: [boardId], references: [id])
+  Board     Board?    @relation(fields: [boardId], references: [id])
   boardId   Int?
   comments  Comment[]
+  // reportsArr Reported[]
+  reported  Boolean   @default(false)
+  hidden    Boolean   @default(false)
 }
+
 model Comment {
   postedBy User @relation(fields: [userId], references: [id])
-  userId Int @unique
-  id Int    @id @default(autoincrement())
-  post Post @relation(fields: [postId], references: [id])
-  postId Int @unique
+  userId   Int
+  id       Int  @id @default(autoincrement())
+  post     Post @relation(fields: [postId], references: [id])
+  postId   Int
+  doots    Int
 }
+
+model ReportedUser {
+  id               Int  @id @default(autoincrement())
+  reportedUser      User @relation(fields: [reportedUserId], references: [id])
+  reportedUserId Int
+  reportedBy String
+  reason String?
+}
+
 model Profile {
   id     Int     @id @default(autoincrement())
   bio    String?
   user   User    @relation(fields: [userId], references: [id])
   userId Int     @unique
-  photo String
-  doots Int
+  photo  String
+  doots  Int
 }
 
 model User {
-  id      Int      @id @default(autoincrement())
-  email   String   @unique
-  name    String   @unique
-  posts   Post[]
-  profile Profile?
-  boards  Board[]
+  id       Int        @id @default(autoincrement())
+  email    String     @unique
+  name     String     @unique
+  posts    Post[]
+  profile  Profile?
+  boards   Board[]
   password String
   comments Comment[]
+  UserRole UserRole[]
+  Reported ReportedUser[]
+}
+
+model Tag {
+  id      Int    @id @default(autoincrement())
+  name    String @unique
+  Board   Board? @relation(fields: [boardId], references: [id])
+  boardId Int?
 }
 
 model Board {
-  id     Int    @id @default(autoincrement())
-  name   String @unique
-  owner  User   @relation(fields: [userId], references: [id])
-  userId Int
-  posts  Post[]
+  id               Int        @id @default(autoincrement())
+  name             String     @unique
+  owner            User       @relation(fields: [userId], references: [id])
+  userId           Int
+  posts            Post[]
   // tags String[]
+  UserRole         UserRole[]
+  tagId            Int?
+  tags             Tag[]
+  shortDescription String?
+  longDescription  String?
+  motd             String?
+  rules            String?
+}
+
+model UserRole {
+  id            Int       @id @default(autoincrement())
+  user          User      @relation(fields: [userId], references: [id])
+  userId        Int
+  board         Board     @relation(fields: [boardId], references: [id])
+  boardId       Int
+  subscribed    Boolean
+  role          Role
+  banned        Boolean?
+  timeoutStart  DateTime?
+  timeoutLength Int?
+
+  @@index([userId])
+  @@index([boardId])
+}
+
+enum Role {
+  MODERATOR_TIER_1
+  MODERATOR_TIER_2
+  MODERATOR_TIER_3
+  OWNER
+  STANDARD
 }
 
 generator client {
@@ -56,4 +111,5 @@ generator client {
 datasource db {
   provider = "mysql"
   url      = "mysql://root:ezpassword@localhost:3306/database"
+  relationMode = "prisma"
 }

@@ -14,6 +14,7 @@ import AdminPage from './admin/adminPage';
 import CreateAccount from './components/sign-up/createAccount';
 import CreateBoard from './components/board/createBoard';
 import NewPost from './components/board/newPost';
+import ModTools from './admin/modTools';
 axios.defaults.baseURL = 'https://localhost:5000';
 
 // Set default headers for all requests (e.g., for JWT authentication)
@@ -32,7 +33,7 @@ const App: React.FunctionComponent = () => {
               <NavBar />
               <Routes>
                 <Route path="/" element={<Home />} />
-                <Route path="/newBoard" element={authenticated ? <CreateBoard /> : <Navigate to="/auth" />} />
+                <Route path="/newboard" element={authenticated ? <CreateBoard /> : <Navigate to="/auth" />} />
                 <Route path="/list" element={<BoardList />} />
                 <Route path="/board/:name" element={<Board/>} />
                 <Route path="/board/:name/newpost" element={authenticated ? <NewPost /> : <NewPost/>} />
@@ -40,7 +41,8 @@ const App: React.FunctionComponent = () => {
                 <Route path="/profile/:name" element={<Profile />} />
                 <Route path="/auth" element={authenticated ? <></> : <SignInComponent />} />
                 <Route path="/admin" element={authenticated ? <AdminPage /> : <AdminPage />} />
-                <Route path="/register" element={authenticated ? <Home /> : <CreateAccount />} />
+                {/* <Route path="/board/:name/mod" element={authenticated ? <ModTools /> : <ModTools />} /> */}
+                <Route path="/create-account" element={authenticated ? <Home /> : <CreateAccount />} />
               </Routes>
             </>
           )}

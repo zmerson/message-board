@@ -35,7 +35,7 @@ const NewPost: React.FunctionComponent = () => {
     setContent('');
     setImage(null);
     const response = await axios.post<BoardPost>('/api/newpost', { title: title, content: content, authorId: 1, boardName: boardName});
-    const newPostId = response.data.id;
+    const newPostId = await response.data.id;
     console.log(response)
     }
 
@@ -54,10 +54,10 @@ const NewPost: React.FunctionComponent = () => {
           onChange={(e) => setContent(e.target.value)}
           placeholder="Enter your post content..."
         ></textarea>
-        <input
+        {/* <input
           type="file"
           onChange={(e) => setImage(e.target.files ? e.target.files[0] : null)}
-        />
+        /> */}<br></br>
         <button type="submit">Submit</button>
       </form>
       <Link to={`/board/${name}`}>Go back to Board</Link>

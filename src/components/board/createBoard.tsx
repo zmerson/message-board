@@ -12,7 +12,12 @@ interface Board {
   };
   posts: string[];
 }
-
+interface UserRole {
+  userId: number;
+  boardId: number;
+  role: String;
+  subscribed: boolean
+}
 const CreateBoard: React.FunctionComponent = () => {
   const navigate = useNavigate();
   const { authenticated, user } = useAuth() as AuthContextProps
@@ -31,8 +36,13 @@ const CreateBoard: React.FunctionComponent = () => {
         }
       const response = await axios.post<Board>('/api/newboard', { name: boardName, userId: user.id }); // Replace '1' with the actual user ID
       const newBoardName = response.data.name;
+      console.log("here")
+      if (newBoardName){
+        const userRole = await axios.post<UserRole>('/api/newboard/set-owner', { boardId: response.data.id, userId: user.id });
+      
       // Redirect the user to the newly created board page
       navigate(`/board/${newBoardName}`);
+    }
     } catch (error) {
       console.error('Error creating board:', error);
       // Handle error if board creation fails (e.g., show an error message to the user)

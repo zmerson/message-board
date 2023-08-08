@@ -5,10 +5,9 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 interface MyJwtPayload {
     id: number;
-    username: string;
     name: string;
+    email: string;
     exp: number;
-    // Add other properties as needed
   }
 interface AuthWrapperProps {
   children: (authenticated: boolean) => React.ReactNode;
@@ -32,8 +31,8 @@ const { authenticated, updateAuthState } = useContext(AuthContext) as AuthContex
         setAuthenticated(true);
         const userData: UserData = {
             id: decodedToken.id,
-            username: decodedToken.username,
-            name: decodedToken.name,
+            username: decodedToken.name,
+            email: decodedToken.email,
             password: ''
         };
         updateAuthState(true, userData);

@@ -5,9 +5,9 @@ const https = require('https')
 const fs = require('fs')
 const bodyParser = require('body-parser')
 const jwt = require('jsonwebtoken')
-const { PrismaClient } = require('@prisma/client'); // Import PrismaClient
+const { PrismaClient } = require('@prisma/client');
 //separate into multiple files when it gets too big - https://stackoverflow.com/questions/23923365/how-to-separate-routes-on-node-js-and-express-4
-const prisma = new PrismaClient(); // Instantiate PrismaClient
+const prisma = new PrismaClient();
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -19,6 +19,247 @@ const sslOptions = {
 
 app.use(cors())
 
+app.post('/api/board/info/subscribed', async (req, res) => {
+    const { boardId, userId } = req.body
+    //console.log(`board id: ${boardId} , userid: ${userId}`)
+    let subscribed;
+try {
+   subscribed = await prisma.userRole.findFirst({
+    where: {
+      userId: userId,
+      boardId: boardId,
+    }, 
+    select: {
+      subscribed: true,
+    }
+  })
+  if (subscribed == null) {
+    console.log(" userRole status was not found, creating userRole")
+    userRole = await prisma.userRole.create({
+      data: {
+        userId: userId,
+        boardId:  boardId,
+        role: 'STANDARD',
+        subscribed: false,
+      }
+    })
+    subscribed = false 
+    console.log(" set subbed false ")
+  }
+  else {
+    // console.log(JSON.stringify(subscribed))
+    // subscribed = await prisma.userRole.findFirst({
+    //   where: {
+    //         userId: userId,
+    //         boardId: boardId,   
+    //   },
+    //   select: {
+    //     subscribed: true,
+    //   }
+    // })
+    }
+    console.log(`is ${userId} subscribed to ${boardId}? ` + JSON.stringify(subscribed))
+    if (subscribed.subscribed) {
+      res.json({ subscribed: true });
+    } else {
+      res.json({ subscribed: false });
+    }
+  }
+    //res.send(subscribed)
+  catch (error) {
+    console.error('Error fetching boards:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+//get tags
+app.get('/api/board/info/:boardName/tags', async (req, res) => {
+  const { boardName } = req.params.boardName
+  const tags = await prisma.board.findUnique({
+    where: {
+      name: boardName,
+    },
+    include: {
+      tags
+    }
+  })
+  res.json(tags)
+})
+//get userRole
+app.post('/api/board/:boardName/userRole', async (req, res) => {
+  const { userId, boardId } = req.body
+  const userRole = await prisma.userRole.findFirst({
+    where: {
+      userId: userId,
+      boardId: boardId,
+    },
+  })
+  console.log(`returned userRole for boardId=${boardId}, userId =${userId} `)
+  res.json(userRole)
+})
+app.post('/api/:boardName/ban', async (req, res) => {
+  const { boardName } = req.params
+  const userName = req.body 
+  const board = await prisma.board.findFirst({
+    where: {
+      name: boardName,
+    },
+  });
+  const user = await prisma.user.findFirst({
+    where: {
+      name: userName
+    }
+  })
+  //upsert userRole to banned=true
+})
+//update tags
+app.post('/api/board/tags/update', async (req, res) => {
+  const { boardId, tags } = req.body;
+  try {
+    // Update the tags for the board with the given boardId
+    const updatedBoard = await prisma.board.update({
+      where: { id: boardId },
+      data: { tags: { set: tags } },
+    });
+    res.json(updatedBoard);
+  } catch (error) {
+    console.error('Error updating tags:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+//unused
+app.post('/api/board/info/:name', async (req, res) => {
+    const { name } = req.params
+try {
+  const subscribed = await prisma.userRole.findFirstOrThrow({
+    where: { id: userId },
+    include: { subscriptions: { where: { id: boardId } } },
+  });
+}catch (error) {
+  console.error('Error fetching boards:', error);
+  res.status(500).json({ error: 'Internal Server Error' });
+}
+});
+
+app.post('/api/unsubscribe', async (req, res) => {
+   const { boardId, userId } = req.body
+  try {
+    userRole = await prisma.userRole.findFirst({
+      where: {
+        boardId: parseInt(boardId),
+        userId: parseInt(userId)
+      },
+    })
+    const updatedUserRole = await prisma.userRole.update({ 
+    where: {
+      id: UserRole.id,
+      userId:userId,
+      boardId: boardId,
+    },
+    data: {
+      subscribed: false,
+    },
+  });
+  console.log("UserRole updated:", updatedUserRole);
+  }catch (error) {
+  console.error('Error fetching boards:', error);
+  res.status(500).json({ error: 'Internal Server Error' });
+}
+});
+app.post('/api/newboard/set-owner', async (req, res) => {
+  const { boardId, userId } = req.body
+  console.log(boardId)
+  try {
+      const existingUserRole = await prisma.userRole.findFirst({
+        where: {
+          userId: userId,
+          boardId: boardId,
+        },
+      });
+      
+      if (existingUserRole) {
+        const updatedUserRole = await prisma.userRole.update({
+          where: {    
+              id: existingUserRole.id,    
+              userId: userId,
+              boardId: boardId,
+          },
+          data: {
+            role: 'OWNER', // Update the role or other fields as needed
+            // ... other fields to update
+          },
+        });
+        // Handle the updated entry as needed
+        console.log('UserRole updated:', updatedUserRole);
+      } else {
+        // If the entry does not exist, create a new one
+        const newUserRole = await prisma.userRole.create({
+          data: {
+            userId: userId,
+            boardId: boardId,
+            subscribed: true,
+            role: 'OWNER',
+            // ... other fields for the new entry
+          },
+        });
+        // Handle the newly created entry as needed
+        console.log('New UserRole created:', newUserRole);
+        res.json(newUserRole)
+      }
+  }catch (error) {
+    console.error('Error fetching boards:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+})
+app.post('/api/subscribe', async (req, res) => {
+   const { boardName, userId } = req.body
+try {
+  const board = await prisma.board.findFirst({
+    where: {
+      name: boardName,
+    },
+  });
+  console.log('board is ' + board)
+  if (board){
+    const userRole = await prisma.userRole.findFirstOrThrow({
+      where: {
+        userId,
+        boardId: board.id,
+      }
+    })
+    console.log(`user ${userId} has role ${JSON.stringify(userRole)} on board ${board} before upsert`)
+    const subscribed = await prisma.userRole.upsert({
+      where: {
+        id: userRole.id,
+        userId,
+        boardId: board.id,
+      },
+      update: {
+        subscribed: true,
+      },
+      create: {
+        board: {
+          connect: {
+            id: board.id,
+          },
+        },
+        user: {
+          connect: {
+            id: userId,
+          },
+        },
+        subscribed: true,
+        role: 'STANDARD',
+      }
+    });
+    console.log("upserted " + subscribed)
+  }
+  res.send(true)
+}catch (error) {
+  console.error('Error fetching boards:', error);
+  res.status(500).json({ error: 'Internal Server Error' });
+}
+});
 
 app.get('/api/boards', async (req, res) => {
     
@@ -32,7 +273,7 @@ app.get('/api/boards', async (req, res) => {
         },
       }
     });
-    console.log(JSON.stringify(boards))
+    // console.log(JSON.stringify(boards))
     
     res.json(boards);
 
@@ -40,13 +281,13 @@ app.get('/api/boards', async (req, res) => {
     console.error('Error fetching boards:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
-  })
-app.
+  });
+
 app.post('/api/newboard', async (req, res) => {
   const { name, userId } = req.body;
 
   try {
-    console.log(postedBy)
+    // console.log(postedBy)
     const newBoard = await prisma.board.create({
       data: {
         name,
@@ -54,12 +295,12 @@ app.post('/api/newboard', async (req, res) => {
       },
     });
     res.status(201).json(newBoard);
-
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 app.post('/api/newpost', async (req, res) => {
   const {title, content, authorId, boardName} = req.body;
 
@@ -96,7 +337,8 @@ app.post('/api/newpost', async (req, res) => {
     console.error(error);
     res.status(500).json({error: 'Internal server error'})
   }
-})
+});
+
 app.post('/api/create-account', async (req, res) => {
     const {email, name, password} = req.body;
     let user = false;

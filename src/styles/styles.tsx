@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 
 export const MainContentContainer = styled.div`
-    padding: 10px 150px 50px 200px;
+    padding: 10px 150px 200px 200px;
 `
 export const CardContainer = styled.div`
     padding: 20px;

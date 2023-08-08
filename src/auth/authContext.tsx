@@ -5,8 +5,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 export const AuthContext = createContext<AuthContextProps | null>(null);
 export interface UserData {
   id: number;
+  email: string;
   username: string;
-  name: string;
   password: string;
 }
 

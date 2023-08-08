@@ -4,23 +4,27 @@ import axios from 'axios';
 import { useAuth } from '../../auth/authContext';
 import Sidebar from '../nav-bar/leftSideBar';
 import { CardContainer, MainContentContainer, PageHeader } from '../../styles/styles';
+import BoardInfo from '../nav-bar/rightSideBar';
 
 interface BoardData {
   id: number;
   name: string;
   posts: [{[key: string]: string}];
   owner: string;
-  //posts:[string[];
 }
 
 const Board: React.FunctionComponent = () => {
-  const [board, setBoard] = useState<BoardData | null>(null);
+  const [ board, setBoard ] = useState<BoardData | null>(null);
   const { name } = useParams();
   const { authenticated, user } = useAuth()
   const location = useLocation();
   const admin: boolean = false;
 
   useEffect(() => {
+    const fetchRole = async () => {
+      const userRole = await axios.post(`/api/board/${board!.name}/userRole`, {userId: user!.id})
+      console.log(userRole)
+    }
     const fetchBoard = async () => {
       try {
         // Fetch the board data from the API using the board id
@@ -32,6 +36,10 @@ const Board: React.FunctionComponent = () => {
     };
 
     fetchBoard();
+    if (board){
+      fetchRole()
+    }
+    
   }, []);
   const navigate = useNavigate();
   const handleCreatePost = () => {
@@ -44,7 +52,7 @@ const Board: React.FunctionComponent = () => {
   return (
     
     <MainContentContainer>
-      <Sidebar>
+      <Sidebar><BoardInfo board={board}></BoardInfo>
       <PageHeader>{board.name}</PageHeader>
       { authenticated ? <button onClick={handleCreatePost}>Create Post</button> :
           <NavLink to={`/auth`}  state={{ prev: location.pathname }}>Sign in To Make a New Post</NavLink>}
@@ -58,6 +66,7 @@ const Board: React.FunctionComponent = () => {
       </ul>
       </Sidebar>
     </MainContentContainer>
+    
   );
 };
 
